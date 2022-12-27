@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "pgdb"
+      POSTGRES_USER: "pguser"
+      POSTGRES_PASSWORD: "pgpwd"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - .:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pguser -d pgdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+  webapp:
+    build: ./app
+    environment:
+      ADMIN_LOGIN: "admin"
+      ADMIN_PASSWORD: "admin"
+      DB_NAME: "pgdb"
+      DB_USER: "pguser"
+      DB_PASS: "pgpwd"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+    volumes:
+      - ./upload:/app/upload
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+  bot:
+    build: ./bot
+    environment:
+      BOT_TOKEN: ""
+      DB_NAME: "pgdb"
+      DB_USER: "pguser"
+      DB_PASS: "pgpwd"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+    volumes:
+    - ./upload:/app/upload
+    depends_on:
+      - db
