@@ -46,12 +46,14 @@ async def command_login_handler(message: Message, command: CommandObject,
         except ValueError:
             await message.reply('Failed to parse login/password')
             return
-        _, saved_password = await get_user(login, session_maker)
-        if password == saved_password:
+        user = await get_user(login, session_maker)
+        if user and password == user[1]:
             await login_user(message.from_user.id, login, session_maker)
             await message.answer(f'You are logged in as <b>{login}</b> now',
                                  reply_markup=kb_authorized)
-
+        else:
+            await message.answer('login or password is incorrect',
+                                 reply_markup=kb_unauthorized)
 
 @dp.message(Text(text='Registration'))
 async def registration_handler(message: Message, session_maker: sessionmaker) -> None:
